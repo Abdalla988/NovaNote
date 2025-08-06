@@ -9,14 +9,14 @@ import { Component } from '@angular/core';
         <div class="card">
             <div class="font-semibold text-2xl mb-4">Documentation</div>
             <div class="font-semibold text-xl mb-4">Get Started</div>
-            <p class="text-lg mb-4">Sakai is an application template for Angular and is distributed as a CLI project. Current versions is Angular v20 with PrimeNG v20. In case CLI is not installed already, use the command below to set it up.</p>
+            <p class="text-lg mb-4">NovaNote is an application template for Angular and is distributed as a CLI project. Current versions is Angular v20 with PrimeNG v20. In case CLI is not installed already, use the command below to set it up.</p>
             <pre class="app-code">
 <code>npm install -g &#64;angular/cli</code></pre>
             <p class="text-lg mb-4">
                 Once CLI is ready in your system, extract the contents of the zip file distribution, cd to the directory, install the libraries from npm and then execute "ng serve" to run the application in your local environment.
             </p>
             <pre class="app-code">
-<code>git clone https://github.com/primefaces/sakai-ng
+<code>git clone https://github.com/Abdalla988/NovaNote
 npm install
 ng serve</code></pre>
 
