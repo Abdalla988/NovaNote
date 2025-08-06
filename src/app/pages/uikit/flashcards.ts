@@ -461,7 +461,7 @@ interface FlashcardDeck {
 
             <!-- Review Mode Template -->
             <ng-template #reviewMode>
-                <div class="min-h-screen bg-surface-50 dark:bg-surface-900">
+                <div class="min-h-screen bg-white">
                     <!-- Breadcrumb Navigation - Top Left -->
                     <div class="px-8 pt-6 pb-4 border-b border-surface-200 dark:border-surface-700">
                         <div class="flex items-center justify-between">
@@ -501,12 +501,12 @@ interface FlashcardDeck {
                     </div>
 
                     <!-- Main Content Area -->
-                    <div class="w-full max-w-7xl mx-auto px-8 pb-8 overflow-y-auto">
+                    <div class="w-full mx-auto px-8 pb-8 overflow-y-auto">
                         <div class="flex items-center justify-center min-h-[600px] pt-16">
-                            <div class="w-full max-w-4xl" *ngIf="currentCard()">
+                            <div class="w-full" *ngIf="currentCard()">
                                 
                                 <!-- Flashcard Container -->
-                                <div class="relative mb-10 mt-8 overflow-visible">
+                                <div class="relative mb-10 mt-8 overflow-visible max-w-4xl mx-auto">
                                         <div class="flashcard-container cursor-pointer" 
                                              [class]="'flashcard-container cursor-pointer ' + cardAnimationClass()"
                                              (click)="flipCard()">
@@ -537,10 +537,7 @@ interface FlashcardDeck {
                                                     <!-- Card Footer -->
                                                     <div class="absolute bottom-0 left-0 right-0 p-8 border-t border-surface-200 dark:border-surface-700 bg-gradient-to-r from-surface-50 to-surface-100 dark:from-surface-900/50 dark:to-surface-800/50 rounded-b-3xl">
                                                         <div class="text-center">
-                                                            <div class="flex items-center justify-center gap-3 text-surface-500 dark:text-surface-400">
-                                                                <div class="bg-surface-100 dark:bg-surface-700 rounded-full p-2">
-                                                                    <i class="pi pi-hand-point-up text-lg text-primary"></i>
-                                                                </div>
+                                                            <div class="flex items-center justify-center text-surface-500 dark:text-surface-400">
                                                                 <span class="text-sm font-medium">
                                                                     Click to reveal answer
                                                                 </span>
@@ -591,11 +588,12 @@ interface FlashcardDeck {
                                     </div>
 
                                     <!-- Review Buttons (only show when back is visible) -->
-                                    <div class="grid grid-cols-4 gap-3 mt-8" *ngIf="showCardBack()">
-                                        <!-- Again Button -->
-                                        <button 
-                                            (click)="reviewCard('again')"
-                                            class="group relative h-16 bg-surface-0 dark:bg-surface-800 hover:bg-red-50 dark:hover:bg-red-900/20 border border-surface-200 dark:border-surface-700 hover:border-red-300 dark:hover:border-red-600 rounded-xl transition-all duration-200 hover:shadow-md active:scale-[0.98]">
+                                    <div class="flex justify-center mt-8" *ngIf="showCardBack()">
+                                        <div class="grid grid-cols-4 gap-4 max-w-2xl w-full">
+                                            <!-- Again Button -->
+                                            <button 
+                                                (click)="reviewCard('again')"
+                                                class="group relative h-16 bg-surface-0 dark:bg-surface-800 hover:bg-red-50 dark:hover:bg-red-900/20 border border-surface-200 dark:border-surface-700 hover:border-red-300 dark:hover:border-red-600 rounded-xl transition-all duration-200 hover:shadow-md active:scale-[0.98]">
                                             <div class="flex flex-col items-center justify-center h-full">
                                                 <i class="pi pi-times text-red-500 text-lg mb-2"></i>
                                                 <span class="text-sm font-medium text-surface-900 dark:text-surface-0 group-hover:text-red-600 dark:group-hover:text-red-400">Try Again</span>
@@ -631,28 +629,29 @@ interface FlashcardDeck {
                                                 <span class="text-sm font-medium text-surface-900 dark:text-surface-0 group-hover:text-blue-600 dark:group-hover:text-blue-400">Mastered</span>
                                             </div>
                                         </button>
+                                        </div>
                                     </div>
 
                                     <!-- Card Navigation Bar -->
                                     <div class="mt-8 pt-6 border-t border-surface-200 dark:border-surface-700">
-                                        <div class="flex items-center justify-between w-full">
-                                            <!-- Previous Button -->
-                                            <button 
-                                                (click)="previousCard()"
-                                                [disabled]="currentCardIndex() === 0"
-                                                class="flex items-center justify-center w-12 h-12 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 border border-gray-700 dark:border-gray-300 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black dark:disabled:hover:bg-white">
-                                                <i class="pi pi-chevron-left text-white dark:text-black text-lg"></i>
-                                            </button>
+                                        <div class="flex items-center justify-center w-full relative">
+                                            <!-- Compact Navigation Group - Moved Right -->
+                                            <div class="flex items-center gap-3 ml-12">
+                                                <!-- Previous Button -->
+                                                <button 
+                                                    (click)="previousCard()"
+                                                    [disabled]="currentCardIndex() === 0"
+                                                    class="flex items-center justify-center w-12 h-12 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 border border-gray-700 dark:border-gray-300 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black dark:disabled:hover:bg-white">
+                                                    <i class="pi pi-chevron-left text-white dark:text-black text-lg"></i>
+                                                </button>
 
-                                            <!-- Card Counter - Centered -->
-                                            <div class="flex items-center justify-center px-6 py-3 bg-black dark:bg-white rounded-full">
-                                                <div class="text-lg font-bold text-white dark:text-black">
-                                                    {{ currentCardIndex() + 1 }}/{{ sampleFlashcards().length }}
+                                                <!-- Card Counter -->
+                                                <div class="flex items-center justify-center px-6 py-3 bg-black dark:bg-white rounded-full">
+                                                    <div class="text-lg font-bold text-white dark:text-black">
+                                                        {{ currentCardIndex() + 1 }}/{{ sampleFlashcards().length }}
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <!-- Right Side Container -->
-                                            <div class="flex items-center gap-4">
                                                 <!-- Next Button -->
                                                 <button 
                                                     (click)="nextCard()"
@@ -660,56 +659,69 @@ interface FlashcardDeck {
                                                     class="flex items-center justify-center w-12 h-12 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 border border-gray-700 dark:border-gray-300 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black dark:disabled:hover:bg-white">
                                                     <i class="pi pi-chevron-right text-white dark:text-black text-lg"></i>
                                                 </button>
-
-                                                <!-- Shuffle Button - Separated -->
-                                                <button 
-                                                    (click)="shuffleToRandomCard()"
-                                                    class="flex items-center justify-center w-12 h-12 bg-gray-600 dark:bg-gray-400 hover:bg-gray-500 dark:hover:bg-gray-300 border border-gray-500 dark:border-gray-300 rounded-full transition-all duration-200 ml-4">
-                                                    <i class="pi pi-refresh text-white dark:text-black text-lg"></i>
-                                                </button>
                                             </div>
+
+                                            <!-- Shuffle Button - Positioned Absolutely -->
+                                            <button 
+                                                (click)="shuffleToRandomCard()"
+                                                class="absolute right-0 flex items-center justify-center w-12 h-12 bg-gray-600 dark:bg-gray-400 hover:bg-gray-500 dark:hover:bg-gray-300 border border-gray-500 dark:border-gray-300 rounded-full transition-all duration-200">
+                                                <i class="pi pi-refresh text-white dark:text-black text-lg"></i>
+                                            </button>
                                         </div>
                                     </div>
 
                                     <!-- All Flashcards Section -->
                                     <div class="mt-12 pt-8 border-t border-surface-200 dark:border-surface-700">
                                         <div class="flex items-center justify-between mb-6">
-                                            <div class="flex items-center gap-4">
+                                            <div>
                                                 <h3 class="text-xl font-bold text-surface-900 dark:text-surface-0">All Cards in This Deck</h3>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <!-- Hide Answers Toggle -->
                                                 <div class="flex items-center gap-2">
-                                                    <p-checkbox 
-                                                        [binary]="true"
-                                                        inputId="hideAnswers"
-                                                        [ngModel]="hideAnswers()"
-                                                        (ngModelChange)="hideAnswers.set($event)" />
-                                                    <label for="hideAnswers" class="text-sm text-surface-600 dark:text-surface-400 cursor-pointer">
+                                                    <label for="hideAnswersToggle" class="text-sm text-surface-600 dark:text-surface-400 cursor-pointer font-medium">
                                                         Hide Answers
                                                     </label>
+                                                    <button
+                                                        id="hideAnswersToggle"
+                                                        type="button"
+                                                        [class]="hideAnswers() ? 'bg-primary-500' : 'bg-surface-300 dark:bg-surface-600'"
+                                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                                                        (click)="hideAnswers.set(!hideAnswers())">
+                                                        <span
+                                                            [class]="hideAnswers() ? 'translate-x-6' : 'translate-x-1'"
+                                                            class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out shadow-lg">
+                                                        </span>
+                                                    </button>
                                                 </div>
+                                                <!-- Add New Card Button -->
+                                                <p-button 
+                                                    label="Add New Card"
+                                                    icon="pi pi-plus"
+                                                    severity="primary"
+                                                    size="small"
+                                                    [text]="true"
+                                                    [outlined]="true"
+                                                    [rounded]="true"
+                                                    (onClick)="showAddCardDialog.set(true)"
+                                                    class="opacity-70 hover:opacity-100 transition-opacity duration-200" />
                                             </div>
-                                            <p-button 
-                                                label="Add New Card"
-                                                icon="pi pi-plus"
-                                                severity="primary"
-                                                size="small"
-                                                [text]="true"
-                                                [outlined]="true"
-                                                [rounded]="true"
-                                                (onClick)="showAddCardDialog.set(true)"
-                                                class="opacity-70 hover:opacity-100 transition-opacity duration-200" />
                                         </div>
 
                                         <!-- Flashcards Grid -->
                                         <div class="overflow-y-auto max-h-[600px] scrollbar-thin">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                 <div *ngFor="let card of sampleFlashcards(); let i = index" 
-                                                     class="bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 relative group"
+                                                     class="bg-surface-0 dark:bg-surface-800 border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 relative group min-h-[140px]"
+                                                     [class.border-primary-500]="i === currentCardIndex()"
                                                      [class.ring-2]="i === currentCardIndex()"
-                                                     [class.ring-primary-500]="i === currentCardIndex()"
+                                                     [class.ring-primary-400]="i === currentCardIndex()"
+                                                     [class.border-surface-200]="i !== currentCardIndex()"
+                                                     [class.dark:border-surface-700]="i !== currentCardIndex()"
                                                      (click)="jumpToCard(i)">
                                                     
                                                     <!-- Card Header -->
-                                                    <div class="flex items-center justify-between mb-3">
+                                                    <div class="flex items-center justify-between mb-2">
                                                         <div class="flex items-center gap-2">
                                                             <span class="text-xs font-bold text-surface-500 dark:text-surface-400 bg-surface-100 dark:bg-surface-700 px-2 py-1 rounded-md">
                                                                 Card {{ i + 1 }}
@@ -731,7 +743,7 @@ interface FlashcardDeck {
                                                                     (click)="editCard($event, card)"
                                                                     pTooltip="Edit card"
                                                                     tooltipPosition="top"
-                                                                    class="w-7 h-7" />
+                                                                    class="w-6 h-6" />
                                                                 <p-button 
                                                                     icon="pi pi-trash" 
                                                                     severity="danger"
@@ -741,14 +753,14 @@ interface FlashcardDeck {
                                                                     (click)="deleteCard($event, card)"
                                                                     pTooltip="Delete card"
                                                                     tooltipPosition="top"
-                                                                    class="w-7 h-7" />
+                                                                    class="w-6 h-6" />
                                                             </div>
                                                         </div>
                                                     </div>
                                                     
                                                     <!-- Card Content Preview -->
-                                                    <div class="mb-3">
-                                                        <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-2 line-clamp-2">
+                                                    <div class="mb-2 flex-grow">
+                                                        <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-1 line-clamp-2">
                                                             {{ card.front }}
                                                         </div>
                                                         <div class="text-xs text-surface-600 dark:text-surface-400 line-clamp-1 transition-all duration-300"
@@ -759,7 +771,7 @@ interface FlashcardDeck {
                                                     </div>
                                                     
                                                     <!-- Card Stats -->
-                                                    <div class="flex items-center justify-between text-xs">
+                                                    <div class="flex items-center justify-between text-xs mt-auto">
                                                         <div class="flex gap-2">
                                                             <span class="bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-md font-medium">
                                                                 Difficulty: {{ card.difficulty }}/5
