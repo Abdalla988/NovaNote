@@ -30,6 +30,7 @@ export class AppMenu {
             {
                 label: 'UI Components',
                 items: [
+                    { label: 'Flashcards', icon: 'pi pi-fw pi-bookmark', routerLink: ['/uikit/flashcards'] },
                     { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', routerLink: ['/uikit/formlayout'] },
                     { label: 'Input', icon: 'pi pi-fw pi-check-square', routerLink: ['/uikit/input'] },
                     { label: 'Button', icon: 'pi pi-fw pi-mobile', class: 'rotated-icon', routerLink: ['/uikit/button'] },

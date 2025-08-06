@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { ButtonDemo } from './buttondemo';
 import { ChartDemo } from './chartdemo';
 import { FileDemo } from './filedemo';
+import { Flashcards } from './flashcards';
 import { FormLayoutDemo } from './formlayoutdemo';
 import { InputDemo } from './inputdemo';
 import { ListDemo } from './listdemo';
@@ -16,6 +17,7 @@ import { TreeDemo } from './treedemo';
 import { MenuDemo } from './menudemo';
 
 export default [
+    { path: 'flashcards', data: { breadcrumb: 'Flashcards' }, component: Flashcards },
     { path: 'button', data: { breadcrumb: 'Button' }, component: ButtonDemo },
     { path: 'charts', data: { breadcrumb: 'Charts' }, component: ChartDemo },
     { path: 'file', data: { breadcrumb: 'File' }, component: FileDemo },
