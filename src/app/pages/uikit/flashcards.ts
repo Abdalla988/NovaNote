@@ -244,6 +244,100 @@ interface FlashcardDeck {
                 z-index: -1;
             }
         }
+
+        /* Deck Favorite Sliding Animation */
+        .deck-slide-up {
+            animation: favoriteSlideUp 0.6s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+        }
+
+        .deck-slide-down {
+            animation: unfavoriteSlideDown 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+        }
+
+        .deck-favorite-enter {
+            animation: deckFavoriteEnter 0.5s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+        }
+
+        @keyframes favoriteSlideUp {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+                z-index: 1;
+            }
+            50% {
+                transform: translateY(-10px) scale(1.02);
+                opacity: 0.95;
+                z-index: 10;
+                box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+                z-index: 1;
+                box-shadow: 0 4px 15px rgba(255, 193, 7, 0.15);
+            }
+        }
+
+        @keyframes unfavoriteSlideDown {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+                z-index: 1;
+                box-shadow: 0 4px 15px rgba(255, 193, 7, 0.15);
+            }
+            50% {
+                transform: translateY(5px) scale(0.98);
+                opacity: 0.9;
+                z-index: 1;
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+                z-index: 1;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        @keyframes deckFavoriteEnter {
+            0% {
+                background: transparent;
+                border-color: var(--surface-200);
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
+            }
+            100% {
+                background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.05));
+                border-color: rgba(255, 193, 7, 0.3);
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(255, 193, 7, 0.15);
+            }
+        }
+
+        /* Deck transition styles */
+        .deck-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            position: relative;
+        }
+
+        .deck-favorite {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.05)) !important;
+            border-color: rgba(255, 193, 7, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.15);
+        }
+
+        .dark .deck-favorite {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 193, 7, 0.08)) !important;
+            border-color: rgba(255, 193, 7, 0.4) !important;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
+        }
+
+        /* Deck reorder animation */
+        .deck-list-item {
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
     `],
     template: `
         <!-- Two-column layout -->
@@ -364,8 +458,10 @@ interface FlashcardDeck {
 
                         <!-- Deck List -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div *ngFor="let deck of filteredDecks()" 
-                                 class="bg-white dark:bg-surface-800 rounded-2xl shadow-md border border-surface-200 dark:border-surface-700 p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 relative group"
+                            <div *ngFor="let deck of filteredDecks(); trackBy: trackByDeckId" 
+                                 class="bg-white dark:bg-surface-800 rounded-2xl shadow-md border border-surface-200 dark:border-surface-700 p-4 cursor-pointer deck-transition deck-list-item hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 relative group"
+                                 [class.deck-favorite]="deck.isFavorite"
+                                 [attr.data-deck-id]="deck.id"
                                  (click)="selectDeck(deck)">
                                 
                                 <!-- Action buttons - top right -->
@@ -412,11 +508,6 @@ interface FlashcardDeck {
                                             tooltipPosition="top">
                                             {{ deck.name }}
                                         </h3>
-                                        <i *ngIf="deck.isFavorite" 
-                                           class="pi pi-star-fill text-yellow-500 text-sm flex-shrink-0" 
-                                           style="margin-top: 1px;"
-                                           pTooltip="Favorited deck" 
-                                           tooltipPosition="top"></i>
                                     </div>
                                     <p class="text-surface-600 dark:text-surface-400 text-sm m-0">{{ deck.course }}</p>
                                 </div>
@@ -461,7 +552,7 @@ interface FlashcardDeck {
 
             <!-- Review Mode Template -->
             <ng-template #reviewMode>
-                <div class="min-h-screen bg-white">
+                <div class="min-h-screen bg-white dark:bg-surface-900">
                     <!-- Breadcrumb Navigation - Top Left -->
                     <div class="px-8 pt-6 pb-4 border-b border-surface-200 dark:border-surface-700">
                         <div class="flex items-center justify-between">
@@ -664,7 +755,9 @@ interface FlashcardDeck {
                                             <!-- Shuffle Button - Positioned Absolutely -->
                                             <button 
                                                 (click)="shuffleToRandomCard()"
-                                                class="absolute right-0 flex items-center justify-center w-12 h-12 bg-gray-600 dark:bg-gray-400 hover:bg-gray-500 dark:hover:bg-gray-300 border border-gray-500 dark:border-gray-300 rounded-full transition-all duration-200">
+                                                class="absolute right-0 flex items-center justify-center w-12 h-12 bg-gray-600 dark:bg-gray-400 hover:bg-gray-500 dark:hover:bg-gray-300 border border-gray-500 dark:border-gray-300 rounded-full transition-all duration-200"
+                                                pTooltip="Shuffle"
+                                                tooltipPosition="bottom">
                                                 <i class="pi pi-refresh text-white dark:text-black text-lg"></i>
                                             </button>
                                         </div>
@@ -1529,6 +1622,11 @@ export class Flashcards implements OnInit {
         // Initialize with sample data
     }
 
+    // Track by function for deck list animations
+    trackByDeckId(index: number, deck: FlashcardDeck): string {
+        return deck.id;
+    }
+
     // Add new deck form methods
     hideAddDeckDialog() {
         this.showAddDeckDialog.set(false);
@@ -1792,13 +1890,57 @@ export class Flashcards implements OnInit {
     toggleFavorite(event: Event, deck: FlashcardDeck) {
         event.stopPropagation(); // Prevent deck selection when clicking favorite
         
+        const deckElement = (event.target as HTMLElement).closest('.deck-list-item') as HTMLElement;
+        const wasFavorite = deck.isFavorite;
+        
+        if (deckElement) {
+            if (!wasFavorite) {
+                // Adding to favorites - apply favorite styling with animation
+                deckElement.classList.add('deck-slide-up');
+                
+                // Update the data immediately so Angular re-renders in correct order
+                this.updateDeckFavoriteStatus(deck.id, true);
+                
+                // Clean up animation class after animation completes
+                setTimeout(() => {
+                    deckElement.classList.remove('deck-slide-up');
+                    deckElement.classList.add('deck-favorite-enter');
+                    
+                    setTimeout(() => {
+                        deckElement.classList.remove('deck-favorite-enter');
+                    }, 500);
+                }, 600);
+                
+            } else {
+                // Removing from favorites - apply slide down animation
+                deckElement.classList.add('deck-slide-down');
+                
+                // Update the data after a short delay to allow animation to start
+                setTimeout(() => {
+                    this.updateDeckFavoriteStatus(deck.id, false);
+                }, 100);
+                
+                // Clean up animation class
+                setTimeout(() => {
+                    if (deckElement.parentNode) {
+                        deckElement.classList.remove('deck-slide-down');
+                    }
+                }, 400);
+            }
+        } else {
+            // Fallback if element not found
+            this.updateDeckFavoriteStatus(deck.id, !wasFavorite);
+        }
+    }
+
+    private updateDeckFavoriteStatus(deckId: string, isFavorite: boolean) {
         this.decks.update(decks => 
             decks.map(d => 
-                d.id === deck.id 
+                d.id === deckId 
                     ? { 
                         ...d, 
-                        isFavorite: !d.isFavorite,
-                        favoritedAt: !d.isFavorite ? new Date() : undefined
+                        isFavorite: isFavorite,
+                        favoritedAt: isFavorite ? new Date() : undefined
                     }
                     : d
             )
