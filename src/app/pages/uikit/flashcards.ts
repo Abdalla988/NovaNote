@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -14,7 +14,12 @@ import { BadgeModule } from 'primeng/badge';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { FileUploadModule } from 'primeng/fileupload';
+import { FileUpload } from 'primeng/fileupload';
 import { ConfirmationService } from 'primeng/api';
+
+// AI Generation Service
+import { AIGenerationService, FlashcardData, GenerationProgress } from '../service/ai-generation.service';
 
 // Layout Service
 import { LayoutService } from '../../layout/service/layout.service';
@@ -64,7 +69,8 @@ interface FlashcardDeck {
         BadgeModule,
         TooltipModule,
         ConfirmDialogModule,
-        DialogModule
+        DialogModule,
+        FileUploadModule
     ],
     providers: [ConfirmationService],
     styles: [`
@@ -770,6 +776,21 @@ interface FlashcardDeck {
                                                 <h3 class="text-xl font-bold text-surface-900 dark:text-surface-0">All Cards in This Deck</h3>
                                             </div>
                                             <div class="flex items-center gap-3">
+                                                <!-- AI Flashcard Generation -->
+                                                <div class="flex items-center gap-2">
+                                                    <p-button 
+                                                        label="AI Generate"
+                                                        icon="pi pi-sparkles"
+                                                        severity="secondary"
+                                                        size="small"
+                                                        [text]="true"
+                                                        [outlined]="true"
+                                                        [rounded]="true"
+                                                        (onClick)="showAIGenerateDialog.set(true)"
+                                                        pTooltip="Generate flashcards from documents using AI"
+                                                        tooltipPosition="top"
+                                                        class="opacity-70 hover:opacity-100 transition-opacity duration-200" />
+                                                </div>
                                                 <!-- Hide Answers Toggle -->
                                                 <div class="flex items-center gap-2">
                                                     <label for="hideAnswersToggle" class="text-sm text-surface-600 dark:text-surface-400 cursor-pointer font-medium">
@@ -1329,12 +1350,142 @@ interface FlashcardDeck {
                 </div>
             </div>
         </p-dialog>
+
+        <!-- AI Flashcard Generation Dialog -->
+        <p-dialog 
+            [modal]="true" 
+            [visible]="showAIGenerateDialog()"
+            [style]="{ width: '40rem' }"
+            [draggable]="false"
+            [resizable]="false"
+            [showHeader]="false"
+            (onHide)="hideAIGenerateDialog()">
+            
+            <div class="p-6">
+                <!-- Header -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg p-2">
+                            <i class="pi pi-sparkles text-white text-lg"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold text-surface-900 dark:text-surface-0">AI-Powered Flashcard Generation</h2>
+                    </div>
+                    <p class="text-sm text-surface-600 dark:text-surface-400">Upload a document and let AI automatically generate flashcards from your content</p>
+                </div>
+
+                <!-- File Upload Section -->
+                <div class="field mb-6">
+                    <label class="block text-sm font-medium text-left mb-3 text-surface-900 dark:text-surface-0">
+                        Upload Document
+                    </label>
+                    <div class="border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-xl p-8 text-center hover:border-primary-400 dark:hover:border-primary-500 transition-colors duration-200 cursor-pointer"
+                         (click)="triggerFileInput()"
+                         [class.border-primary-400]="aiGenerationForm().file"
+                         [class.bg-primary-50]="aiGenerationForm().file">
+                        
+                        <!-- Hidden native file input -->
+                        <input 
+                            #fileInput
+                            type="file"
+                            accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                            (change)="handleFileSelect($event)"
+                            style="display: none;" />
+                        
+                        <div *ngIf="!aiGenerationForm().file">
+                            <div class="bg-blue-100 dark:bg-blue-900/20 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <i class="pi pi-cloud-upload text-2xl text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-0 mb-2">Upload your document</h3>
+                            <p class="text-sm text-surface-600 dark:text-surface-400 mb-3">
+                                Supports PDF, Word, PowerPoint, Text files, and Images
+                            </p>
+                            <p class="text-xs text-surface-500 dark:text-surface-400">
+                                Maximum file size: 10MB
+                            </p>
+                        </div>
+                        
+                        <div *ngIf="aiGenerationForm().file">
+                            <div class="bg-green-100 dark:bg-green-900/20 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <i class="pi pi-check text-2xl text-green-600 dark:text-green-400"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-0 mb-2">{{ aiGenerationForm().file?.name }}</h3>
+                            <p class="text-sm text-surface-600 dark:text-surface-400 mb-3">
+                                {{ formatFileSize(aiGenerationForm().file?.size || 0) }} • Ready for processing
+                            </p>
+                            <button 
+                                type="button"
+                                (click)="removeSelectedFile($event)"
+                                class="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium">
+                                Remove file
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subject Detection -->
+                <div class="field mb-6" *ngIf="aiGenerationForm().detectedSubject">
+                    <label class="block text-sm font-medium text-left mb-2 text-surface-900 dark:text-surface-0">
+                        Detected Subject
+                    </label>
+                    <div class="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <i class="pi pi-info-circle text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-sm font-medium text-blue-800 dark:text-blue-300">{{ aiGenerationForm().detectedSubject }}</span>
+                    </div>
+                    <small class="text-xs text-surface-500 dark:text-surface-400 block mt-1">
+                        AI automatically detected this subject from your file content
+                    </small>
+                </div>
+
+                <!-- Generation Progress -->
+                <div class="field mb-6" *ngIf="aiGenerationInProgress()">
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="animate-spin">
+                                <i class="pi pi-spinner text-purple-600 dark:text-purple-400 text-lg"></i>
+                            </div>
+                            <span class="text-sm font-medium text-purple-800 dark:text-purple-300">{{ aiGenerationStep() || 'Processing...' }}</span>
+                        </div>
+                        <p-progressBar 
+                            [value]="aiGenerationProgress()" 
+                            [showValue]="false" 
+                            styleClass="h-2" />
+                        <p class="text-xs text-purple-600 dark:text-purple-400 mt-2">
+                            AI is analyzing your document and creating intelligent flashcards
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4 pt-4 border-t border-surface-200 dark:border-surface-700">
+                    <p-button 
+                        label="Cancel" 
+                        severity="secondary"
+                        size="small"
+                        [text]="true"
+                        [disabled]="aiGenerationInProgress()"
+                        (onClick)="hideAIGenerateDialog()" />
+                    <p-button
+                        type="button"
+                        label="Generate Flashcards"
+                        icon="pi pi-sparkles"
+                        severity="primary"
+                        size="small"
+                        [disabled]="!aiGenerationForm().file || aiGenerationInProgress()"
+                        [loading]="aiGenerationInProgress()"
+                        (onClick)="generateAIFlashcards()" />
+                </div>
+            </div>
+        </p-dialog>
     `
 })
 export class Flashcards implements OnInit {
+    @ViewChild('fileUpload') fileUpload!: FileUpload;
+    @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
     constructor(
         private confirmationService: ConfirmationService,
-        public layoutService: LayoutService
+        public layoutService: LayoutService,
+        private aiService: AIGenerationService
     ) {}
 
     // Theme computed properties
@@ -1414,6 +1565,20 @@ export class Flashcards implements OnInit {
     // Animation state for flashcard transitions
     cardAnimationClass = signal<string>('');
     isAnimating = signal<boolean>(false);
+
+    // AI Generation state
+    showAIGenerateDialog = signal<boolean>(false);
+    aiGenerationInProgress = signal<boolean>(false);
+    aiGenerationProgress = signal<number>(0);
+    aiGenerationStep = signal<string>('');
+    
+    aiGenerationForm = signal<{
+        file: File | null;
+        detectedSubject: string | null;
+    }>({
+        file: null,
+        detectedSubject: null
+    });
 
     // Sample Data
     decks = signal<FlashcardDeck[]>([
@@ -2077,5 +2242,164 @@ export class Flashcards implements OnInit {
         } else {
             return `${diffDays}d ago`;
         }
+    }
+
+    // AI Generation methods
+    hideAIGenerateDialog() {
+        this.showAIGenerateDialog.set(false);
+        this.aiGenerationInProgress.set(false);
+        this.aiGenerationProgress.set(0);
+        this.aiGenerationStep.set('');
+        this.resetAIGenerationForm();
+    }
+
+    resetAIGenerationForm() {
+        this.aiGenerationForm.set({
+            file: null,
+            detectedSubject: null
+        });
+    }
+
+    triggerFileInput() {
+        if (this.fileInput && this.fileInput.nativeElement) {
+            this.fileInput.nativeElement.click();
+        }
+    }
+
+    handleFileSelect(event: any) {
+        const file = event.target.files[0];
+        if (file) {
+            // Check file size (10MB limit)
+            if (file.size > 10485760) {
+                alert('File size must be less than 10MB');
+                return;
+            }
+
+            // Detect subject from filename using AI service
+            const detectedSubject = this.aiService.detectSubjectFromFile(file.name);
+            
+            this.aiGenerationForm.update(form => ({
+                ...form,
+                file: file,
+                detectedSubject: detectedSubject
+            }));
+        }
+    }
+
+    onFileSelect(event: any) {
+        const file = event.files[0];
+        if (file) {
+            // Detect subject from filename using AI service
+            const detectedSubject = this.aiService.detectSubjectFromFile(file.name);
+            
+            this.aiGenerationForm.update(form => ({
+                ...form,
+                file: file,
+                detectedSubject: detectedSubject
+            }));
+        }
+    }
+
+    openFileDialog() {
+        // Use ViewChild to access the file upload component
+        if (this.fileUpload) {
+            this.fileUpload.choose();
+        }
+    }
+
+    removeSelectedFile(event: Event) {
+        event.stopPropagation();
+        this.aiGenerationForm.update(form => ({
+            ...form,
+            file: null,
+            detectedSubject: null
+        }));
+    }
+
+    formatFileSize(bytes: number): string {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async generateAIFlashcards() {
+        const form = this.aiGenerationForm();
+        if (!form.file) return;
+
+        this.aiGenerationInProgress.set(true);
+        this.aiGenerationProgress.set(0);
+
+        try {
+            // Use the real AI service to generate flashcards
+            const generatedCards = await this.aiService.generateFlashcards(
+                form.file,
+                form.detectedSubject || 'General Studies',
+                (progress: GenerationProgress) => {
+                    this.aiGenerationProgress.set(progress.progress);
+                    this.aiGenerationStep.set(progress.step);
+                }
+            );
+
+            // Convert AI-generated cards to our flashcard format
+            const flashcards = this.convertAICardsToFlashcards(generatedCards, form.detectedSubject || 'General Studies');
+            
+            // Add generated cards to the current deck
+            if (this.selectedDeck()) {
+                this.sampleFlashcards.update(cards => [...cards, ...flashcards]);
+                
+                // Update deck stats
+                const currentDeck = this.selectedDeck()!;
+                currentDeck.totalCards += flashcards.length;
+                currentDeck.newCards += flashcards.length;
+            } else {
+                // Create a new deck for the generated cards
+                const newDeck: FlashcardDeck = {
+                    id: Date.now().toString(),
+                    name: `AI Generated - ${form.detectedSubject || 'General Studies'}`,
+                    course: form.detectedSubject || 'General Studies',
+                    totalCards: flashcards.length,
+                    newCards: flashcards.length,
+                    color: 'purple'
+                };
+                
+                this.decks.update(decks => [...decks, newDeck]);
+                this.selectDeck(newDeck);
+                this.sampleFlashcards.set(flashcards);
+            }
+
+            // Show success
+            this.aiGenerationInProgress.set(false);
+            this.hideAIGenerateDialog();
+            
+            // You could add a toast notification here
+            console.log(`Successfully generated ${flashcards.length} flashcards using AI from ${form.file.name}`);
+            
+        } catch (error) {
+            console.error('AI generation failed:', error);
+            this.aiGenerationInProgress.set(false);
+            
+            // Show error message to user
+            alert(`Failed to generate flashcards: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+        }
+    }
+
+    convertAICardsToFlashcards(aiCards: FlashcardData[], subject: string): Flashcard[] {
+        return aiCards.map((card, index) => ({
+            id: Date.now().toString() + index,
+            front: card.front,
+            back: card.back,
+            course: subject,
+            difficulty: card.difficulty as 1 | 2 | 3 | 4 | 5,
+            status: 'new' as 'new' | 'learning' | 'review' | 'mastered',
+            lastReviewed: undefined,
+            nextReview: new Date(),
+            interval: 1,
+            easeFactor: 2.5,
+            reviewCount: 0,
+            streak: 0,
+            createdAt: new Date()
+        }));
     }
 }
